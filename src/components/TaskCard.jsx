@@ -1,0 +1,35 @@
+import { CATS, catStyle } from '../lib/config.js';
+import { fmtTime } from '../lib/dates.js';
+import { taskTitle } from '../lib/tasks.js';
+import { CatIcon, IcClock, IcGrip } from './Icons.jsx';
+
+// One task, shown as a single row: category · title · time.
+export default function TaskCard({ task, editing, dragging, onOpen, onDragStart, onDragEnd }) {
+  const c = task.category;
+  const time = task.start ? `${fmtTime(task.start)}${task.end ? ' – ' + fmtTime(task.end) : ''}` : 'Anytime';
+  const inner = <>
+    <span className="cat-cell"><span className="chip"><CatIcon cat={c} />{CATS[c].name}</span></span>
+    <span className="title">{taskTitle(task)}</span>
+    <span className={`time ${task.start ? '' : 'anytime'}`}><IcClock />{time}</span>
+    {editing && <IcGrip />}
+  </>;
+
+  // View mode: read-only row with all details.
+  if (!editing) return <div className="card" style={catStyle(c)}>{inner}</div>;
+
+  // Edit mode: draggable, and clicking opens the edit dialog.
+  return (
+    <button
+      type="button"
+      className={`card editable ${dragging ? 'dragging' : ''}`}
+      style={catStyle(c)}
+      draggable
+      onDragStart={e => { e.dataTransfer.setData('text/plain', task.id); e.dataTransfer.effectAllowed = 'move'; onDragStart(task.id); }}
+      onDragEnd={onDragEnd}
+      onClick={() => onOpen(task)}
+      aria-label={`Edit ${taskTitle(task)}`}
+    >
+      {inner}
+    </button>
+  );
+}
