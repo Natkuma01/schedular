@@ -4,7 +4,11 @@ A cheerful, dark-mode weekly and monthly planner built with React and Vite.
 
 - **Week view:** a vertical list, one row per day (Monday to Sunday), with every task listed under each other. Click **Edit** to drag tasks between days, edit or delete them, and crown successful days.
 - **Month view:** category names in their colors, plus crowns.
-- **Categories:** Networking Events, Learning, Project time, Job Hunt, House work, Others. Each one asks its own question.
+- **Categories:** start with Networking Events, Learning, Project time, Job Hunt, House work, Others. In **Add task → Edit categories** you can rename them, change their question, color and icon, add new ones, or delete unused ones. Each category has a type:
+  - **Event** — text plus a start and end time.
+  - **Dropdown** — an all-day task picked from a list. Add options in the category editor, or with **+ Add option** right in the task form.
+  - **Count** — a whole number, e.g. how many job applications.
+  - **Other** — text, with an optional start and end time.
 - **5 crowns in a week** sets off a celebration.
 - Click the cat to change the name at the top.
 - Data is saved in your browser (localStorage) on this device.
@@ -57,16 +61,17 @@ src/
     MonthView.jsx         month grid with category pills and crowns
     TaskCard.jsx          one task row
     TaskModal.jsx         add / edit task (category-specific questions)
+    CategoryEditor.jsx    create / rename / delete categories and their dropdown options
     NameModal.jsx         change the name in the header
     Celebration.jsx       5-crown confetti pop-up
     Icons.jsx             category icons, crown and cat artwork
   lib/
-    config.js             categories, colors, dropdown options, prompts
+    config.js             category types, default categories, colors and icons
     dates.js              date helpers (weeks start on Monday)
     tasks.js              sorting, titles, example data
     storage.js            saving to localStorage
   styles.css              all styling and colors
 ```
 
-To change dropdown options or category colors, edit `src/lib/config.js`.
+Category changes are saved in the browser. To change the starting categories for new visitors, edit `DEFAULT_CATS` in `src/lib/config.js`.
 # schedular

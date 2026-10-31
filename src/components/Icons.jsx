@@ -2,8 +2,8 @@ const S = props => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props} />
 );
 
-export function CatIcon({ cat }) {
-  switch (cat) {
+export function CatIcon({ icon }) {
+  switch (icon) {
     case 'network': return <S><path d="M4 5h11a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H9l-4 3v-3H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z" /><path d="M19 9h1a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2v3l-3-3h-4" /></S>;
     case 'learning': return <S><path d="M2 5c3-1.5 7-1.5 10 1 3-2.5 7-2.5 10-1v14c-3-1.5-7-1.5-10 1-3-2.5-7-2.5-10-1z" /><path d="M12 6v14" /></S>;
     case 'project': return <S><path d="M12 2c4 3 5 8 3 13H9C7 10 8 5 12 2z" /><circle cx="12" cy="9" r="1.6" /><path d="M9 15l-3 3v3l4-2M15 15l3 3v3l-4-2" /></S>;
@@ -18,6 +18,7 @@ export const IcLeft = () => <S><path d="M15 5l-7 7 7 7" /></S>;
 export const IcRight = () => <S><path d="M9 5l7 7-7 7" /></S>;
 export const IcPlus = () => <S><path d="M12 5v14M5 12h14" /></S>;
 export const IcPencil = () => <S><path d="M4 20l4-1 11-11-3-3L5 16z" /><path d="M14 6l3 3" /></S>;
+export const IcTrash = () => <S><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" /></S>;
 export const IcCheck = () => <S><path d="M5 12l5 5 9-10" /></S>;
 export const IcGrip = () => (
   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="grip">

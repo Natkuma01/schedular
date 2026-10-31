@@ -28,7 +28,7 @@ export default function App() {
     return () => removeEventListener('keydown', k);
   }, []);
 
-  const { tasks, crowns } = state;
+  const { tasks, crowns, cats } = state;
   const days = weekDays(anchor);
   const weekCrowns = days.filter(d => crowns[keyOf(d)]).length;
   const hasSample = tasks.some(t => t.sample);
@@ -52,7 +52,14 @@ export default function App() {
     setModal(null);
   };
   const deleteTask = id => { setState(s => ({ ...s, tasks: s.tasks.filter(t => t.id !== id) })); setModal(null); };
-  const clearSamples = () => setState({ tasks: tasks.filter(t => !t.sample), crowns: {} });
+  const saveCat = cat => setState(s => ({
+    ...s,
+    cats: s.cats.some(c => c.id === cat.id) ? s.cats.map(c => (c.id === cat.id ? cat : c)) : [...s.cats, cat],
+  }));
+  const deleteCat = id => setState(s => ({ ...s, cats: s.cats.filter(c => c.id !== id) }));
+  const usage = {};
+  tasks.forEach(t => (usage[t.category] = (usage[t.category] || 0) + 1));
+  const clearSamples = () => setState(s => ({ ...s, tasks: s.tasks.filter(t => !t.sample), crowns: {} }));
   const closeParty = useCallback(() => setParty(0), []);
 
   const shift = dir =>
@@ -114,21 +121,21 @@ export default function App() {
 
         {view === 'week' ? (
           <WeekView
-            anchor={anchor} tasks={tasks} crowns={crowns} editing={editing}
+            anchor={anchor} tasks={tasks} cats={cats} crowns={crowns} editing={editing}
             onToggleCrown={toggleCrown} onMove={moveTask}
             onOpenTask={t => setModal({ task: t, date: t.date })}
             onAdd={k => setModal({ date: k })}
           />
         ) : (
-          <MonthView anchor={anchor} tasks={tasks} crowns={crowns} onPickDay={d => { setAnchor(d); setView('week'); }} />
+          <MonthView anchor={anchor} tasks={tasks} cats={cats} crowns={crowns} onPickDay={d => { setAnchor(d); setView('week'); }} />
         )}
       </main>
 
       {modal && (
         <TaskModal
           key={modal.task?.id || 'new-' + modal.date}
-          initial={modal.task} defaultDate={modal.date}
-          onSave={saveTask} onDelete={deleteTask} onClose={() => setModal(null)}
+          initial={modal.task} defaultDate={modal.date} cats={cats} usage={usage}
+          onSave={saveTask} onDelete={deleteTask} onSaveCat={saveCat} onDeleteCat={deleteCat} onClose={() => setModal(null)}
         />
       )}
       {naming && <NameModal name={name} onSave={n => { setName(n); setNaming(false); }} onClose={() => setNaming(false)} />}

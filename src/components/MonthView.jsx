@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { CATS, CAT_ORDER, catStyle } from '../lib/config.js';
+import { catById, catStyle } from '../lib/config.js';
 import { DOW, addDays, keyOf, startOfWeek } from '../lib/dates.js';
 import { groupByDay, sortTasks } from '../lib/tasks.js';
 import { Crown } from './Icons.jsx';
@@ -7,7 +7,7 @@ import { Crown } from './Icons.jsx';
 const MAX_PILLS = 3;
 
 // Month view is read-only: category names in their colors, plus crowns. Clicking a day opens that week.
-export default function MonthView({ anchor, tasks, crowns, onPickDay }) {
+export default function MonthView({ anchor, tasks, cats, crowns, onPickDay }) {
   const first = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
   const last = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0);
   const cells = [];
@@ -32,15 +32,15 @@ export default function MonthView({ anchor, tasks, crowns, onPickDay }) {
               aria-label={`${d.toDateString()}: ${list.length} tasks${crowns[k] ? ', crowned' : ''}. Open this week`}
             >
               <div className="mtop"><span className="mnum">{d.getDate()}</span>{crowns[k] && <Crown />}</div>
-              {list.slice(0, MAX_PILLS).map(t => <span key={t.id} className="pill" style={catStyle(t.category)}>{CATS[t.category].name}</span>)}
+              {list.slice(0, MAX_PILLS).map(t => <span key={t.id} className="pill" style={catStyle(catById(cats, t.category))}>{catById(cats, t.category).name}</span>)}
               {list.length > MAX_PILLS && <span className="more">+{list.length - MAX_PILLS} more</span>}
-              <span className="dots">{list.map(t => <i key={t.id} className="dot" style={catStyle(t.category)} />)}</span>
+              <span className="dots">{list.map(t => <i key={t.id} className="dot" style={catStyle(catById(cats, t.category))} />)}</span>
             </button>
           );
         })}
       </div>
       <div className="legend">
-        {CAT_ORDER.map(c => <span key={c} style={catStyle(c)}><i />{CATS[c].name}</span>)}
+        {cats.map(c => <span key={c.id} style={catStyle(c)}><i />{c.name}</span>)}
         <span><Crown />Successful day</span>
       </div>
     </div>

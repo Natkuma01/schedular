@@ -2,8 +2,9 @@ import { addDays, keyOf, startOfWeek } from './dates.js';
 
 export const uid = () => Math.random().toString(36).slice(2, 10);
 
-export const taskTitle = t =>
-  t.category === 'job' ? `Send ${t.count} job application${t.count === 1 ? '' : 's'}` : t.detail;
+// Count tasks read like "5 job applications"; everything else shows its text.
+export const taskTitle = (t, cat) =>
+  cat.type === 'count' ? `${t.count} ${cat.unit || cat.name}${t.count === 1 ? '' : 's'}` : t.detail;
 
 // Untimed tasks first (in the order they were added), then timed tasks by start time.
 export const sortTasks = list => [...list].sort((a, b) => {
@@ -28,11 +29,11 @@ export function makeSample() {
   const tasks = [
     T(-7, 'learning', { detail: 'Machine Learning video' }), T(-6, 'job', { count: 4 }), T(-5, 'project', { detail: 'Spaceship titanic' }),
     T(-4, 'network', { detail: 'Alumni mixer', start: '18:00', end: '20:00' }), T(-3, 'house', { detail: 'Laundry' }), T(-2, 'learning', { detail: 'Kaggle' }),
-    T(0, 'learning', { detail: 'Data Analysis', start: '09:00', end: '11:00' }), T(0, 'job', { count: 5 }),
+    T(0, 'learning', { detail: 'Data Analysis' }), T(0, 'job', { count: 5 }),
     T(1, 'network', { detail: 'Women in Data coffee chat', start: '18:00', end: '19:30' }), T(1, 'project', { detail: 'Spaceship titanic' }),
     T(2, 'learning', { detail: 'Kaggle' }), T(2, 'house', { detail: 'Laundry' }),
-    T(3, 'project', { detail: 'Homicide-clearance', start: '13:00', end: '16:00' }), T(3, 'job', { count: 3 }),
-    T(4, 'learning', { detail: 'AWS Data Certificate', start: '10:00', end: '12:00' }), T(4, 'others', { detail: 'Call mom' }),
+    T(3, 'project', { detail: 'Homicide-clearance' }), T(3, 'job', { count: 3 }),
+    T(4, 'learning', { detail: 'AWS Data Certificate' }), T(4, 'others', { detail: 'Call mom' }),
     T(5, 'house', { detail: 'Deep cleaning' }), T(5, 'network', { detail: 'PyData meetup', start: '14:00', end: '16:00' }),
     T(6, 'project', { detail: 'Wine Inventory Tracker' }),
     T(9, 'network', { detail: 'Career fair', start: '10:00', end: '13:00' }), T(10, 'learning', { detail: 'Data Analysis' }), T(12, 'house', { detail: 'Decorate' }),

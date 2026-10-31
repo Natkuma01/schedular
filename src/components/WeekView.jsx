@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
+import { catById } from '../lib/config.js';
 import { DOW_LONG, MONTHS, keyOf, weekDays } from '../lib/dates.js';
 import { groupByDay, sortTasks } from '../lib/tasks.js';
 import { Crown, IcPlus } from './Icons.jsx';
 import TaskCard from './TaskCard.jsx';
 
 // The week as a vertical list: one row per day (Monday at the top), tasks listed under each other.
-export default function WeekView({ anchor, tasks, crowns, editing, onToggleCrown, onMove, onOpenTask, onAdd }) {
+export default function WeekView({ anchor, tasks, cats, crowns, editing, onToggleCrown, onMove, onOpenTask, onAdd }) {
   const days = weekDays(anchor);
   const today = keyOf(new Date());
   const [over, setOver] = useState(null);
@@ -66,6 +67,7 @@ export default function WeekView({ anchor, tasks, crowns, editing, onToggleCrown
                 <TaskCard
                   key={t.id}
                   task={t}
+                  cat={catById(cats, t.category)}
                   editing={editing}
                   dragging={dragId === t.id}
                   onOpen={onOpenTask}

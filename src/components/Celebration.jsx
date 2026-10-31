@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { CATS, CAT_ORDER } from '../lib/config.js';
+import { COLORS } from '../lib/config.js';
 import { Crown } from './Icons.jsx';
 
 function Confetti() {
@@ -13,7 +13,7 @@ function Confetti() {
     resize();
     addEventListener('resize', resize);
 
-    const colors = [...CAT_ORDER.map(c => CATS[c].color), '#FFC800', '#FFC800'];
+    const colors = [...COLORS.slice(0, 6).map(c => c.color), '#FFC800', '#FFC800'];
     const parts = Array.from({ length: 220 }, () => ({
       x: innerWidth / 2 + (Math.random() - 0.5) * 120, y: innerHeight * 0.45,
       vx: (Math.random() - 0.5) * 18, vy: -Math.random() * 18 - 6,
