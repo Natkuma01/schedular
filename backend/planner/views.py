@@ -2,12 +2,16 @@ import json
 from datetime import date, time
 from pathlib import Path
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django.db import connection
 from django.http import FileResponse, Http404, HttpRequest, JsonResponse
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from .models import CrownDay, Task
+from rest_framework_simplejwt.tokens import RefreshToken
+from .models import CrownDay, PlannerData, Task
 
 
 def frontend(request: HttpRequest, asset: str = "") -> FileResponse:
@@ -45,6 +49,20 @@ def body_json(request: HttpRequest) -> dict:
     return value
 
 
+def clean_planner_state(data: dict) -> dict:
+    tasks = data.get("tasks", [])
+    crowns = data.get("crowns", {})
+    cats = data.get("cats", [])
+    if not isinstance(tasks, list) or not isinstance(crowns, dict) or not isinstance(cats, list):
+        raise ValueError("tasks and cats must be arrays, and crowns must be an object")
+    if len(tasks) > 5000 or len(cats) > 100 or len(crowns) > 5000:
+        raise ValueError("Planner state is too large")
+    state = {"tasks": tasks, "crowns": crowns, "cats": cats}
+    if len(json.dumps(state).encode("utf-8")) > 1_000_000:
+        raise ValueError("Planner state must be smaller than 1 MB")
+    return state
+
+
 def parse_task(data: dict, partial: bool = False, current_category: str | None = None) -> dict:
     parsed = {}
     for field in ("date", "category", "detail", "start", "end"):
@@ -76,20 +94,52 @@ def parse_task(data: dict, partial: bool = False, current_category: str | None =
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@throttle_classes([])
 def health(request: HttpRequest) -> JsonResponse:
     with connection.cursor() as cursor:
         cursor.execute("SELECT 1")
     return JsonResponse({"status": "ok"})
 
 
-@api_view(["GET"])
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def register(request: HttpRequest) -> JsonResponse:
+    try:
+        data = body_json(request)
+        username = str(data.get("username", "")).strip()
+        email = str(data.get("email", "")).strip().lower()
+        password = str(data.get("password", ""))
+        if not username or not email or not password:
+            raise ValueError("Username, email, and password are required")
+        User = get_user_model()
+        if User.objects.filter(email__iexact=email).exists():
+            raise ValueError("An account with this email already exists")
+        user = User(username=username, email=email)
+        user.full_clean(exclude=["password"])
+        validate_password(password, user=user)
+        user.set_password(password)
+        user.save()
+        PlannerData.objects.create(owner=user, state={"tasks": [], "crowns": {}, "cats": []})
+    except ValidationError as error:
+        message = next(iter(error.message_dict.values()))[0] if hasattr(error, "message_dict") else error.messages[0]
+        return JsonResponse({"error": message}, status=400)
+    except (TypeError, ValueError) as error:
+        return JsonResponse({"error": str(error)}, status=400)
+    refresh = RefreshToken.for_user(user)
+    return JsonResponse({"access": str(refresh.access_token), "refresh": str(refresh), "user": {"username": user.username}}, status=201)
+
+
+@api_view(["GET", "PUT"])
 @permission_classes([IsAuthenticated])
 def planner_state(request: HttpRequest) -> JsonResponse:
-    return JsonResponse({
-        "tasks": [task_json(task) for task in Task.objects.filter(owner=request.user)],
-        "crowns": [day.date.isoformat() for day in CrownDay.objects.filter(owner=request.user)],
-        "user": {"username": request.user.get_username()},
-    })
+    planner, created = PlannerData.objects.get_or_create(owner=request.user)
+    if request.method == "PUT":
+        try:
+            planner.state = clean_planner_state(body_json(request))
+        except (TypeError, ValueError) as error:
+            return JsonResponse({"error": str(error)}, status=400)
+        planner.save(update_fields=["state", "updated_at"])
+    return JsonResponse({**clean_planner_state(planner.state), "has_state": not created, "user": {"username": request.user.get_username()}})
 
 
 @api_view(["POST"])

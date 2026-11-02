@@ -1,52 +1,137 @@
-# Deploying Crown & Calendar
+# Deploy to PythonAnywhere (free Beginner plan)
 
-The production deployment is one Django web app. Django serves the exported
-Next.js frontend and the `/api/` routes from the same hostname, while SQLite is
-stored on persistent disk.
+This application deploys as one same-origin Django site: Django handles `/api/`
+and serves the compiled React application from `frontend/dist`. SQLite is kept
+on PythonAnywhere's persistent filesystem. No Node.js process or CORS setup is
+needed in production.
 
-## Recommended free host: PythonAnywhere
+Replace `YOUR_USERNAME` below with your PythonAnywhere username.
 
-1. Create a free Beginner account and clone this repository in a Bash console.
-2. From the repository root, build the frontend:
+## 1. Prepare and push from your computer
 
-   ```bash
-   cd frontend && npm ci
-   npm run build
-   ```
-
-3. Create a virtual environment and prepare Django:
-
-   ```bash
-   python -m venv .venv
-   .venv/bin/pip install -r backend/requirements.txt
-   .venv/bin/python backend/manage.py migrate
-   .venv/bin/python backend/manage.py collectstatic --noinput
-   .venv/bin/python backend/manage.py createsuperuser
-   ```
-
-4. In **Web**, add a manual Django web app, select the virtual environment, and
-   point its WSGI file at `backend/config/wsgi.py`. Add the variables shown in
-   `backend/.env.example` to the WSGI file before importing the application.
-5. Reload the web app and open `https://YOUR_USERNAME.pythonanywhere.com`.
-
-Sign in to the planner with the superuser created in step 3. The frontend sends
-a short-lived JWT access token to the API and automatically rotates the refresh
-token. Create additional users with `createsuperuser` or through Django admin;
-each user receives an isolated set of tasks and crown days.
-
-Generate a secret with:
+Build the frontend and commit the complete application, including
+`frontend/dist`:
 
 ```bash
-python -c "import secrets; print(secrets.token_urlsafe(50))"
+cd /Users/nataliechan/Desktop/projects/planner/frontend
+npm ci
+npm run build
+cd ..
+git add .
+git commit -m "Prepare PythonAnywhere production deployment"
+git push origin main
 ```
 
-Run the static build and migrations again after pulling changes. Back up
-`backend/db.sqlite3` before schema migrations or major releases.
+Never commit `backend/.env`, `backend/db.sqlite3`, or a real secret key.
 
-## Docker hosts
+## 2. Clone on PythonAnywhere
 
-The backend also includes a Gunicorn Dockerfile. SQLite is safe only when the
-host provides a persistent disk and the app runs as a single instance. Set
-`SQLITE_PATH` to the mounted disk path. Render's free web service has ephemeral
-storage, so it is unsuitable for this SQLite configuration without a paid disk
-or a switch to managed Postgres.
+Create a free account, open a Bash console, and run:
+
+```bash
+cd ~
+git clone https://github.com/Natkuma01/schedular.git planner
+cd ~/planner
+python3.13 -m venv .venv
+.venv/bin/pip install --no-cache-dir -r backend/requirements.txt
+mkdir -p data
+```
+
+If Python 3.13 is not offered when creating the web app, use the newest Python
+version shown there for both the virtual environment and the web app.
+
+## 3. Configure production values
+
+Generate a secret in the Bash console:
+
+```bash
+python3 -c "import secrets; print(secrets.token_urlsafe(50))"
+```
+
+In PythonAnywhere, open **Web**, choose **Add a new web app**, select **Manual
+configuration**, and choose the same Python version as the virtual environment.
+
+Set the virtualenv field to:
+
+```text
+/home/YOUR_USERNAME/planner/.venv
+```
+
+Open the WSGI configuration file from the Web page and replace its contents:
+
+```python
+import os
+import sys
+
+project = "/home/YOUR_USERNAME/planner/backend"
+if project not in sys.path:
+    sys.path.insert(0, project)
+
+os.environ["DJANGO_SETTINGS_MODULE"] = "config.settings"
+os.environ["DJANGO_SECRET_KEY"] = "PASTE_YOUR_GENERATED_SECRET"
+os.environ["DJANGO_DEBUG"] = "false"
+os.environ["DJANGO_ALLOWED_HOSTS"] = "YOUR_USERNAME.pythonanywhere.com"
+os.environ["DJANGO_CSRF_TRUSTED_ORIGINS"] = "https://YOUR_USERNAME.pythonanywhere.com"
+os.environ["DJANGO_TIME_ZONE"] = "America/New_York"
+os.environ["SQLITE_PATH"] = "/home/YOUR_USERNAME/planner/data/db.sqlite3"
+
+from config.wsgi import application
+```
+
+## 4. Initialize Django
+
+Back in the Bash console:
+
+```bash
+cd ~/planner
+.venv/bin/python backend/manage.py migrate
+.venv/bin/python backend/manage.py collectstatic --noinput
+.venv/bin/python backend/manage.py check --deploy
+.venv/bin/python backend/manage.py createsuperuser
+```
+
+The superuser is optional for normal registration but gives you access to
+`/admin/`.
+
+## 5. Configure static files
+
+On the PythonAnywhere **Web** page, add these mappings:
+
+```text
+URL: /assets/
+Directory: /home/YOUR_USERNAME/planner/frontend/dist/assets
+
+URL: /static/
+Directory: /home/YOUR_USERNAME/planner/backend/staticfiles
+```
+
+Do not map `/` as static; Django serves `index.html` and the API.
+
+Click **Reload**, then open:
+
+```text
+https://YOUR_USERNAME.pythonanywhere.com
+```
+
+Check the health endpoint at `/api/health/`, create an account, add a task, sign
+out and back in, and confirm that the task remains.
+
+## Updating the site
+
+Build and push the frontend from your computer first. Then on PythonAnywhere:
+
+```bash
+cd ~/planner
+git pull --ff-only
+.venv/bin/pip install --no-cache-dir -r backend/requirements.txt
+.venv/bin/python backend/manage.py migrate
+.venv/bin/python backend/manage.py collectstatic --noinput
+```
+
+Finally click **Reload** on the Web page.
+
+## Backups and free-plan limits
+
+Download `~/planner/data/db.sqlite3` regularly from the Files page. The free
+plan has one worker, 512 MiB disk space, and requires monthly web-app renewal.
+Do not upload `frontend/node_modules`; the committed `frontend/dist` is enough.

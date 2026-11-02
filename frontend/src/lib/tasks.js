@@ -6,8 +6,12 @@ export const uid = () => Math.random().toString(36).slice(2, 10);
 export const taskTitle = (t, cat) =>
   cat.type === 'count' ? `${t.count} ${cat.unit || cat.name}${t.count === 1 ? '' : 's'}` : t.detail;
 
-// Untimed tasks first (in the order they were added), then timed tasks by start time.
+// Reminders always lead the day in week and month views. Within each priority
+// group, untimed tasks keep their added order and timed tasks sort by start.
 export const sortTasks = list => [...list].sort((a, b) => {
+  const aReminder = String(a.category).toLowerCase() === 'reminder';
+  const bReminder = String(b.category).toLowerCase() === 'reminder';
+  if (aReminder !== bReminder) return aReminder ? -1 : 1;
   if (!a.start && !b.start) return (a.order || 0) - (b.order || 0);
   if (!a.start) return -1;
   if (!b.start) return 1;

@@ -9,6 +9,7 @@ export function CatIcon({ icon }) {
     case 'project': return <S><path d="M12 2c4 3 5 8 3 13H9C7 10 8 5 12 2z" /><circle cx="12" cy="9" r="1.6" /><path d="M9 15l-3 3v3l4-2M15 15l3 3v3l-4-2" /></S>;
     case 'job': return <S><rect x="2.5" y="7" width="19" height="13" rx="2.5" /><path d="M8.5 7V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v2M2.5 13h19" /></S>;
     case 'house': return <S><path d="M3 11l9-7 9 7" /><path d="M5 10v10h14V10" /><path d="M10 20v-5h4v5" /></S>;
+    case 'reminder': return <S><path d="M6 18h12M8 18v-7a4 4 0 0 1 8 0v7M4 22h16M12 2v3M3.5 7l2.6 1.5M20.5 7l-2.6 1.5" /></S>;
     default: return <S><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6-5.3-3-5.3 3 1.2-6L3.4 9.3l6-.7z" /></S>;
   }
 }

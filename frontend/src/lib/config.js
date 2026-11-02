@@ -23,7 +23,7 @@ export const COLORS = [
   { color: '#C47A3A', dark: '#A3612A' },
 ];
 
-export const ICONS = ['network', 'learning', 'project', 'job', 'house', 'star'];
+export const ICONS = ['network', 'learning', 'project', 'job', 'house', 'star', 'reminder'];
 
 // The starting categories. Users can rename, recolor, add and remove them; they are saved with the tasks.
 export const DEFAULT_CATS = [
@@ -36,6 +36,7 @@ export const DEFAULT_CATS = [
   { id: 'house',    name: 'House work',        type: 'dropdown', icon: 'house',    ...COLORS[4], prompt: 'Which chore?',
     options: ['Laundry', 'Deep cleaning', 'Decorate'] },
   { id: 'others',   name: 'Others',            type: 'text',     icon: 'star',     ...COLORS[5], prompt: 'What is the plan?' },
+  { id: 'reminder', name: 'Reminder',          type: 'text',     icon: 'reminder', color: '#FF4B4B', dark: '#D93636', prompt: 'What is extremely important?' },
 ];
 
 // Shown if a task points at a category that no longer exists.

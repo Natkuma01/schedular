@@ -5,9 +5,9 @@ import { CatIcon, IcCheck, IcPencil, IcPlus } from './Icons.jsx';
 import CategoryEditor from './CategoryEditor.jsx';
 
 // Step 1: pick a category (or edit the categories). Step 2: fill in the category's own question, date and time.
-export default function TaskModal({ initial, defaultDate, cats, usage, onSave, onDelete, onSaveCat, onDeleteCat, onClose }) {
+export default function TaskModal({ initial, defaultDate, defaultCategory, cats, usage, onSave, onDelete, onSaveCat, onDeleteCat, onClose }) {
   const isEdit = !!initial;
-  const [catId, setCatId] = useState(initial ? initial.category : null);
+  const [catId, setCatId] = useState(initial ? initial.category : defaultCategory || null);
   const [detail, setDetail] = useState(initial?.detail || '');
   const [organizer, setOrganizer] = useState(initial?.organizer || '');
   const [count, setCount] = useState(initial?.count ?? 1);
@@ -167,10 +167,12 @@ export default function TaskModal({ initial, defaultDate, cats, usage, onSave, o
               id="f-text"
               className={`input ${errors.detail ? 'bad' : ''}`}
               value={detail}
+              maxLength={cat.id === 'reminder' ? 80 : 240}
               onChange={e => setDetail(e.target.value)}
               autoFocus
-              placeholder={type === 'event' ? 'e.g. PyData meetup downtown' : 'e.g. Dentist appointment'}
+              placeholder={cat.id === 'reminder' ? 'e.g. Submit application before the deadline' : type === 'event' ? 'e.g. PyData meetup downtown' : 'e.g. Dentist appointment'}
             />
+            {cat.id === 'reminder' && <span className="hint">{detail.length}/80 characters</span>}
             {errors.detail && <span className="err">{errors.detail}</span>}
           </div>
         )}

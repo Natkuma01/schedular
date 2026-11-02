@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import CrownDay, Task
+from .models import CrownDay, PlannerData, Task
 
 
 @admin.register(Task)
@@ -10,3 +10,4 @@ class TaskAdmin(admin.ModelAdmin):
 
 
 admin.site.register(CrownDay)
+admin.site.register(PlannerData)

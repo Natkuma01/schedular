@@ -35,3 +35,9 @@ class CrownDay(models.Model):
     class Meta:
         ordering = ["date"]
         constraints = [models.UniqueConstraint(fields=["owner", "date"], name="unique_crown_per_user_day")]
+
+
+class PlannerData(models.Model):
+    owner = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="planner_data")
+    state = models.JSONField(default=dict)
+    updated_at = models.DateTimeField(auto_now=True)

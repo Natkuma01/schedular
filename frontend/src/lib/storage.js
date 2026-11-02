@@ -16,12 +16,17 @@ export function loadState() {
       if (!raw) continue;
       const s = JSON.parse(raw);
       if (s && Array.isArray(s.tasks)) {
-        const cats = Array.isArray(s.cats) && s.cats.length ? s.cats : DEFAULT_CATS; // older saves had no categories
-        return { tasks: s.tasks, crowns: s.crowns || {}, cats };
+        return normalizeState(s);
       }
     } catch (e) { /* bad data: try the next key */ }
   }
   return { ...makeSample(), cats: DEFAULT_CATS };
+}
+
+export function normalizeState(state = {}) {
+  const savedCats = Array.isArray(state.cats) && state.cats.length ? state.cats : DEFAULT_CATS;
+  const cats = [...savedCats, ...DEFAULT_CATS.filter(c => !savedCats.some(saved => saved.id === c.id))];
+  return { tasks: Array.isArray(state.tasks) ? state.tasks : [], crowns: state.crowns && typeof state.crowns === 'object' ? state.crowns : {}, cats };
 }
 
 export function saveState(state) {

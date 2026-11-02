@@ -3,12 +3,12 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 from django.test import TestCase
 
-from .models import CrownDay, Task
+from .models import CrownDay, PlannerData, Task
 
 
 class PlannerApiTests(TestCase):
     def setUp(self):
-        self.user = get_user_model().objects.create_user(username="natalie", password="strong-test-password")
+        self.user = get_user_model().objects.create_user(username="natalie", email="natalie@example.com", password="strong-test-password")
         self.other_user = get_user_model().objects.create_user(username="other", password="strong-test-password")
         self.client = APIClient()
         self.client.force_authenticate(self.user)
@@ -21,6 +21,26 @@ class PlannerApiTests(TestCase):
         self.assertIn("access", response.json())
         anonymous.credentials(HTTP_AUTHORIZATION=f"Bearer {response.json()['access']}")
         self.assertEqual(anonymous.get(reverse("planner-state")).status_code, 200)
+
+    def test_registration_rejects_weak_password(self):
+        anonymous = APIClient()
+        response = anonymous.post(reverse("register"), {"username": "newperson", "email": "new@example.com", "password": "1"}, format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(get_user_model().objects.filter(username="newperson").exists())
+
+    def test_registration_rejects_duplicate_email(self):
+        anonymous = APIClient()
+        response = anonymous.post(reverse("register"), {"username": "newperson", "email": self.user.email, "password": "anything"}, format="json")
+        self.assertEqual(response.status_code, 400)
+
+    def test_planner_state_persists_and_is_scoped_to_user(self):
+        state = {"tasks": [{"id": "abc", "date": "2026-11-01", "category": "reminder", "detail": "Important"}], "crowns": {"2026-11-01": True}, "cats": [{"id": "reminder", "name": "Reminder"}]}
+        self.assertEqual(self.client.put(reverse("planner-state"), state, format="json").status_code, 200)
+        self.assertEqual(self.client.get(reverse("planner-state")).json()["tasks"][0]["detail"], "Important")
+        self.assertEqual(PlannerData.objects.get(owner=self.user).state, state)
+        other = APIClient()
+        other.force_authenticate(self.other_user)
+        self.assertEqual(other.get(reverse("planner-state")).json()["tasks"], [])
 
     def test_task_lifecycle_is_scoped_to_user(self):
         response = self.client.post(reverse("tasks"), {"date": "2026-11-01", "category": "Learning", "detail": "Django", "start": "09:00", "end": "10:00"}, format="json")

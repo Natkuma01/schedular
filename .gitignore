@@ -1,6 +1,7 @@
 # Dependencies and generated frontend output
 frontend/node_modules/
-frontend/dist/
+# The small production frontend build is committed so PythonAnywhere does not
+# need Node.js or node_modules.
 
 # Python and Django runtime files
 backend/.env
